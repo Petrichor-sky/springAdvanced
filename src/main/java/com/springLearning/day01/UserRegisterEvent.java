@@ -1,4 +1,4 @@
-package com.springLearning;
+package com.springLearning.day01;
 
 import org.springframework.context.ApplicationEvent;
 

@@ -1,14 +1,10 @@
-package com.springLearning;
+package com.springLearning.day01;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.DefaultSingletonBeanRegistry;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.env.EnvironmentCapable;
-import org.springframework.core.io.support.ResourcePatternResolver;
 
 import java.lang.reflect.Field;
 import java.util.Locale;
@@ -66,6 +62,8 @@ public class BeanFactoryAndApplicationContext {
 
 
         context.publishEvent(new UserRegisterEvent(context));
+
+        
 
     }
 }
