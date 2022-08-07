@@ -4,6 +4,7 @@ package com.springLearning.day02;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
@@ -26,7 +27,7 @@ public class TestBeanFactory {
             System.out.println(beanDefinitionName);
         }
 
-        //1 . 给 BeanFactory 添加一些常用的后处理器 (提供解析注解的能力)
+        //1 . 给 BeanFactory 添加一些常用的后处理器 (提供解析注解的能力),同时给 bean 工厂还设置了比较器
             //这里只是将常用的后处理器bean添加进beanFactory 工厂中 , 第 2,3 步操作是建立后处理器 bean 与 beanFactory 的的联系,使其生效
         AnnotationConfigUtils.registerAnnotationConfigProcessors(beanFactory);
 
@@ -60,7 +61,9 @@ public class TestBeanFactory {
 
         //3. Bean 后处理器,针对 Bean 生命周期各个阶段提供拓展,例如 @Autowire @Resource...
         //BeanPostProcessor 接口下有CommonAnnotationBeanPostProcessor 和 AutowiredAnnotationProcessor实现类,分别去解析@Resource 和 @Autowire 注解
-        beanFactory.getBeansOfType(BeanPostProcessor.class).values().forEach(beanFactory::addBeanPostProcessor);
+        beanFactory.getBeansOfType(BeanPostProcessor.class).values().stream().sorted(
+                beanFactory.getDependencyComparator()
+        ).forEach(beanFactory::addBeanPostProcessor);
         for (String beanDefinitionName : beanFactory.getBeanDefinitionNames()) {
             System.out.println(beanDefinitionName);
         }
@@ -74,13 +77,28 @@ public class TestBeanFactory {
 
         /*
             学到了什么：
-            O. beanFactory 不会做的事
-
-            1. 不会主动调用 BeanFactory 后处理器
-            2. 不会主动添加 Bean 后处理器
-            3.不会去动动始化發份
-            4.不会解加beanFactory 还不会解折 )1与#{} b. bean 后处理器会有排房的逻算
+            a. beanFactory 不会做的事
+                1. 不会主动调用 BeanFactory 后处理器
+                2. 不会主动添加 Bean 后处理器
+                3.不会去动动始化单例
+                4.不会解析beanFactory 还不会解折 ${} 与 #{}
+            b. bean 后处理器会有排序的逻辑
          */
+
+        /*
+            后处理器的排序
+                由上文知道后处理包括AutowiredAnnotationProcessor 解析@Autowire 注解 和 CommonAnnotationProcessor 解析 @Resource 注解
+                @Autowire 默认按照类型匹配,若有多个同类型的 bean 会报错 , 可以通过指定需要注入的 bean 的名字来自动注入,例如  @Autowire Bean bean3;
+                或者配合@Qualifier(名字)来达到同样效果.
+                @Resource(name = bean3) 默认按照名字注入,优先级高于变量名
+
+                当 @Autowire 和 @Resource 同时出现在一个变量上方时, 默认情况下 @Autowire 生效 , 这是因为 AutowiredAnnotationProcessor 排序更优先
+                从 AnnotationConfigUtils.registerAnnotationConfigProcessors(beanFactory);点进去看, 这一步操作不仅是添加过后处理器,同时也为 beanFactory
+                set 了比较器 , 我们可以利用.stream().sorted(beanFactory.getDependencyComparator())来使比较器生效,该比较器同时继承了OrderComparator,
+                本质上就是比较 order 值的大小,order 越小优先级越高.
+
+         */
+
 
 
     }
